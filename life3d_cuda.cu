@@ -16,6 +16,7 @@
 using std::cin, std::cout, std::endl;
 using std::ifstream, std::ofstream;
 
+// CUDA核函数：模拟一个时间步
 __global__ void life3d_kernel(char *universe, char *next, int N)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -47,26 +48,29 @@ __global__ void life3d_kernel(char *universe, char *next, int N)
         next[idx] = universe[idx];
 }
 
+// 核心模拟函数，将世界向前推进T个时刻（CUDA版本）
 void life3d_run_cuda(int N, char *universe, int T)
 {
     char *d_universe, *d_next;
     size_t size = N * N * N * sizeof(char);
 
+    // 分配设备内存
     cudaMalloc(&d_universe, size);
     cudaMalloc(&d_next, size);
     cudaMemcpy(d_universe, universe, size, cudaMemcpyHostToDevice);
 
-    dim3 blockDim(8, 8, 8);
+    dim3 blockDim(8, 8, 8); // 定义线程块和网格尺寸
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y, (N + blockDim.z - 1) / blockDim.z);
 
     for (int t = 0; t < T; t++)
     {
-        life3d_kernel<<<gridDim, blockDim>>>(d_universe, d_next, N);
+        life3d_kernel<<<gridDim, blockDim>>>(d_universe, d_next, N); // 调用核函数
         cudaMemcpy(d_universe, d_next, size, cudaMemcpyDeviceToDevice);
     }
 
-    cudaMemcpy(universe, d_universe, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(universe, d_universe, size, cudaMemcpyDeviceToHost); // 复制结果回主机
 
+    // 释放设备内存
     cudaFree(d_universe);
     cudaFree(d_next);
 }

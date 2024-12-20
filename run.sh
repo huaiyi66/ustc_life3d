@@ -14,6 +14,7 @@ life3d 256 8 data/data.in data/data.out
 CPU:
 nvcc -std=c++17 life3d.cu -o life3d
 life3d 256 8 data/data.in data/data.out
+life3d 256 16 data/data.in data/data.out
 
 start population: 3856918
 final population: 2642387
